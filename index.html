@@ -44,6 +44,48 @@
       <li><span class="legend__dot legend__dot--medio"></span>Medio</li>
       <li><span class="legend__dot legend__dot--lleno"></span>Lleno</li>
     </ul>
+    <button class="report-btn" id="btnReportar">⚠ Reportar incidente</button>
+  </section>
+
+  <!-- Formulario flotante para reportar un incidente sobre un tramo -->
+  <section class="panel panel--report" id="panelReporte" hidden>
+    <div class="panel__head">
+      <h2 class="panel__title">Nuevo incidente</h2>
+      <button class="panel__toggle" id="cerrarReporte" aria-label="Cerrar">✕</button>
+    </div>
+    <p class="panel__hint" id="reporteHint">Elige el tramo afectado:</p>
+
+    <label class="report-field">
+      <span>Tramo</span>
+      <select id="reporteTramo"></select>
+    </label>
+
+    <label class="report-field">
+      <span>Tipo</span>
+      <select id="reporteTipo">
+        <option value="accidente">Accidente</option>
+        <option value="trancon">Trancón</option>
+        <option value="danio_via">Daño de vía</option>
+        <option value="control_policial">Control policial</option>
+        <option value="otro">Otro</option>
+      </select>
+    </label>
+
+    <label class="report-field">
+      <span>Gravedad</span>
+      <select id="reporteGravedad">
+        <option value="leve">Leve</option>
+        <option value="moderado" selected>Moderado</option>
+        <option value="grave">Grave</option>
+      </select>
+    </label>
+
+    <label class="report-field">
+      <span>Descripción (opcional)</span>
+      <input type="text" id="reporteDescripcion" placeholder="Ej: dos carriles cerrados" />
+    </label>
+
+    <button class="report-submit" id="enviarReporte">Reportar</button>
   </section>
 
   <!-- Panel flotante derecho: tiempos del corredor -->

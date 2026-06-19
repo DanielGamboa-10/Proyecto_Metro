@@ -383,7 +383,85 @@ html, body {
 }
 .popup-btn:hover { background: #00d9bc; }
 
-/* ---------------------------------------------------------------- responsive */
+/* ---------------------------------------------------------------- report incident */
+.report-btn {
+  width: 100%;
+  margin-top: 12px;
+  background: rgba(232,72,90,0.12);
+  border: 1px solid rgba(232,72,90,0.4);
+  color: #FF8A99;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.report-btn:hover { background: rgba(232,72,90,0.2); }
+
+.panel--report {
+  top: 78px;
+  left: 290px;
+  width: 260px;
+  padding: 16px;
+  z-index: 1100;
+}
+
+.report-field {
+  display: block;
+  margin-top: 12px;
+  font-size: 11.5px;
+  color: var(--ink-dim);
+  font-family: var(--font-mono);
+}
+.report-field span { display: block; margin-bottom: 4px; }
+.report-field select,
+.report-field input {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: 7px;
+  padding: 7px 8px;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+}
+.report-field select:focus,
+.report-field input:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+
+.report-submit {
+  width: 100%;
+  margin-top: 14px;
+  background: var(--teal);
+  color: #06201B;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.report-submit:hover { background: #00d9bc; }
+
+.incident-icon { background: none !important; border: none !important; }
+.incident-pin {
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.popup-btn--alt {
+  background: var(--panel-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  margin-top: 4px;
+}
+.popup-btn--alt:hover { background: var(--line); }
+
+@media (max-width: 760px) {
+  .panel--report { left: 16px; right: 16px; width: auto; top: auto; bottom: 20px; }
+}
 @media (max-width: 760px) {
   .topbar__sub { display: none; }
   .panel--fleet { width: 180px; }

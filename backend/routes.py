@@ -9,7 +9,15 @@ from fastapi import APIRouter, HTTPException
 
 from data import BUSES_ESTADO, RUTAS
 from geo import factor_hora_pico, haversine_km, interpolar
-from models import BusPosition
+from incidents import (
+    Incidente,
+    IncidenteCrear,
+    crear_incidente,
+    listar_incidentes,
+    resolver_incidente,
+)
+from models import BusPosition, OcupacionActualizar
+from services.occupancy_service import actualizar_ocupacion
 
 router = APIRouter()
 
@@ -122,3 +130,68 @@ def calcular_eta(bus_id: str, stop_index: int):
         "eta_minutos": eta_minutos,
         "hora_consulta": datetime.now().strftime("%H:%M:%S"),
     }
+
+
+# ---------------------------------------------------------------------------
+# OCUPACIÓN REAL (puente para cámara / YOLO)
+# ---------------------------------------------------------------------------
+@router.post("/buses/{bus_id}/ocupacion", response_model=BusPosition)
+def actualizar_ocupacion_bus(bus_id: str, datos: OcupacionActualizar):
+    """
+    Endpoint que llama tu pipeline de cámara/YOLO (o cualquier sensor)
+    para reportar la ocupación real de un bus. Acepta:
+      - {"ocupacion": "lleno"}        -> ya clasificado por ti
+      - {"conteo_personas": 27}       -> el backend lo clasifica
+
+    Ver services/occupancy_service.py para los umbrales de clasificación
+    y services/yolo_service.py para cómo conectar una cámara real.
+    """
+    try:
+        actualizar_ocupacion(bus_id, ocupacion=datos.ocupacion, conteo_personas=datos.conteo_personas)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+    return posicion_actual(bus_id)
+
+
+# ---------------------------------------------------------------------------
+# INCIDENTES VIALES
+# ---------------------------------------------------------------------------
+@router.get("/incidentes", response_model=List[Incidente])
+def obtener_incidentes(solo_activos: bool = True):
+    """Lista los incidentes reportados (por defecto, solo los activos)."""
+    return listar_incidentes(solo_activos=solo_activos)
+
+
+@router.post("/incidentes", response_model=Incidente)
+def reportar_incidente(datos: IncidenteCrear):
+    """
+    Reporta un incidente (accidente, trancón, daño de vía, control policial)
+    sobre un tramo de la ruta. Mientras esté activo, los buses que pasan
+    por ese tramo reducen su velocidad real según la gravedad reportada.
+    """
+    if datos.ruta_id not in RUTAS:
+        raise HTTPException(404, "Ruta no encontrada")
+
+    ruta = RUTAS[datos.ruta_id]
+    if not (0 <= datos.segmento_index < len(ruta) - 1):
+        raise HTTPException(400, "Índice de tramo inválido para esta ruta")
+
+    if datos.tipo not in {"accidente", "trancon", "danio_via", "control_policial", "otro"}:
+        raise HTTPException(400, "Tipo de incidente inválido")
+    if datos.gravedad not in {"leve", "moderado", "grave"}:
+        raise HTTPException(400, "Gravedad inválida (usa leve | moderado | grave)")
+
+    p1, p2 = ruta[datos.segmento_index], ruta[datos.segmento_index + 1]
+    punto_medio = interpolar(p1, p2, 0.5)
+
+    return crear_incidente(datos, punto_medio)
+
+
+@router.delete("/incidentes/{incidente_id}", response_model=Incidente)
+def cerrar_incidente(incidente_id: str):
+    """Marca un incidente como resuelto (ya no afecta la velocidad de los buses)."""
+    incidente = resolver_incidente(incidente_id)
+    if not incidente:
+        raise HTTPException(404, "Incidente no encontrado")
+    return incidente

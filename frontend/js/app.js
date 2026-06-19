@@ -7,8 +7,10 @@ const BACKEND_URL = ""; // mismo origen: FastAPI sirve este frontend, no hace fa
 const INTERVALO_REFRESCO_MS = 3000;          // cada cuánto le pregunta al backend
 
 let mapa;
-const marcadores = {};   // bus_id -> L.circleMarker
+const marcadores = {};   // bus_id -> L.marker
+const marcadoresIncidentes = {}; // incidente_id -> L.marker
 let estacionesCache = [];
+const INTERVALO_INCIDENTES_MS = 8000;
 
 const COLORES = {
   vacio: "#00C2A8",
@@ -74,6 +76,35 @@ function calcularRumbo([lat1, lng1], [lat2, lng2]) {
   return (Math.atan2(y, x) * 180) / Math.PI;
 }
 
+// Ícono de incidente: triángulo de alerta, coloreado por gravedad.
+const COLOR_GRAVEDAD = { leve: "#F5A623", moderado: "#FF7A45", grave: "#E8485A" };
+const ETIQUETA_TIPO = {
+  accidente: "Accidente",
+  trancon: "Trancón",
+  danio_via: "Daño de vía",
+  control_policial: "Control policial",
+  otro: "Incidente",
+};
+
+function iconoIncidente(gravedad) {
+  const color = COLOR_GRAVEDAD[gravedad] || COLOR_GRAVEDAD.moderado;
+  const html = `
+    <div class="incident-pin" style="border-color:${color}">
+      <svg width="16" height="16" viewBox="0 0 24 24">
+        <path fill="${color}" d="M12 2L1 21h22L12 2zm0 5.5L18.5 19h-13L12 7.5z"/>
+        <rect x="11" y="10" width="2" height="5" fill="#0E1116"/>
+        <rect x="11" y="16" width="2" height="2" fill="#0E1116"/>
+      </svg>
+    </div>`;
+  return L.divIcon({
+    html,
+    className: "incident-icon",
+    iconSize: [26, 26],
+    iconAnchor: [13, 22],
+    popupAnchor: [0, -20],
+  });
+}
+
 // ---------------------------------------------------------------- reloj
 function iniciarReloj() {
   const el = document.getElementById("clock");
@@ -106,8 +137,15 @@ function iniciarMapa() {
   actualizarBuses();
   setInterval(actualizarBuses, INTERVALO_REFRESCO_MS);
 
+  actualizarIncidentes();
+  setInterval(actualizarIncidentes, INTERVALO_INCIDENTES_MS);
+
   document.getElementById("toggleTiempos").addEventListener("click", toggleTiempos);
   document.getElementById("etaClose").addEventListener("click", cerrarEta);
+
+  document.getElementById("btnReportar").addEventListener("click", abrirFormularioReporte);
+  document.getElementById("cerrarReporte").addEventListener("click", cerrarFormularioReporte);
+  document.getElementById("enviarReporte").addEventListener("click", enviarReporteIncidente);
 }
 
 function toggleTiempos() {
@@ -262,6 +300,94 @@ async function consultarEta(busId, stopIndex) {
 
 function cerrarEta() {
   document.getElementById("etaCard").hidden = true;
+}
+
+// ---------------------------------------------------------------- incidentes viales
+async function actualizarIncidentes() {
+  try {
+    const resp = await fetch(`${BACKEND_URL}/incidentes`);
+    const incidentes = await resp.json();
+    const idsVistos = new Set();
+
+    incidentes.forEach((inc) => {
+      idsVistos.add(inc.id);
+      if (marcadoresIncidentes[inc.id]) return; // ya está dibujado, no cambia de lugar
+
+      const marcador = L.marker([inc.lat, inc.lng], { icon: iconoIncidente(inc.gravedad) }).addTo(mapa);
+      marcador.bindPopup(construirPopupIncidente(inc));
+      marcadoresIncidentes[inc.id] = marcador;
+    });
+
+    // Quita del mapa los incidentes que ya se resolvieron (ya no vienen activos)
+    Object.keys(marcadoresIncidentes).forEach((id) => {
+      if (!idsVistos.has(id)) {
+        mapa.removeLayer(marcadoresIncidentes[id]);
+        delete marcadoresIncidentes[id];
+      }
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function construirPopupIncidente(inc) {
+  const div = document.createElement("div");
+  div.innerHTML = `
+    <div class="popup-title">${ETIQUETA_TIPO[inc.tipo] || inc.tipo}</div>
+    <div class="popup-speed">gravedad: ${inc.gravedad} · reportado ${inc.reportado_en}</div>
+    ${inc.descripcion ? `<div class="popup-speed">${inc.descripcion}</div>` : ""}
+    <button class="popup-btn popup-btn--alt">Marcar resuelto</button>
+  `;
+  div.querySelector(".popup-btn").addEventListener("click", () => resolverIncidente(inc.id));
+  return div;
+}
+
+async function resolverIncidente(incidenteId) {
+  try {
+    await fetch(`${BACKEND_URL}/incidentes/${incidenteId}`, { method: "DELETE" });
+    if (marcadoresIncidentes[incidenteId]) {
+      mapa.removeLayer(marcadoresIncidentes[incidenteId]);
+      delete marcadoresIncidentes[incidenteId];
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// ---------------------------------------------------------------- formulario de reporte
+function abrirFormularioReporte() {
+  const select = document.getElementById("reporteTramo");
+  select.innerHTML = estacionesCache.slice(0, -1).map((est, idx) => `
+    <option value="${idx}">${est.nombre} → ${estacionesCache[idx + 1].nombre}</option>
+  `).join("");
+  document.getElementById("panelReporte").hidden = false;
+}
+
+function cerrarFormularioReporte() {
+  document.getElementById("panelReporte").hidden = true;
+}
+
+async function enviarReporteIncidente() {
+  const segmento_index = Number(document.getElementById("reporteTramo").value);
+  const tipo = document.getElementById("reporteTipo").value;
+  const gravedad = document.getElementById("reporteGravedad").value;
+  const descripcion = document.getElementById("reporteDescripcion").value.trim() || null;
+
+  try {
+    const resp = await fetch(`${BACKEND_URL}/incidentes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ruta_id: "troncal", segmento_index, tipo, gravedad, descripcion }),
+    });
+    if (!resp.ok) throw new Error("No se pudo crear el incidente");
+
+    cerrarFormularioReporte();
+    document.getElementById("reporteDescripcion").value = "";
+    actualizarIncidentes();
+  } catch (err) {
+    console.error(err);
+    alert("No se pudo reportar el incidente. Revisa la conexión con el backend.");
+  }
 }
 
 // ---------------------------------------------------------------- arranque
