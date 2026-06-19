@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metrolínea Reportes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="puntos.css">
+</head>
+<body>
+
+  <header class="topbar" id="topbar" hidden>
+    <a class="brand" href="#/reportar">🚇 Metrolínea Reportes</a>
+    <nav id="topnav">
+      <a href="#/reportar" data-route="/reportar">Reportar</a>
+      <a href="#/mis_puntos" data-route="/mis_puntos">Mis puntos</a>
+      <a href="#/ranking" data-route="/ranking">Ranking</a>
+      <a href="../index.html">Mapa en vivo</a>
+      <a href="#/" id="logoutBtn">Salir</a>
+      <button class="theme-toggle" data-theme-toggle aria-label="Cambiar modo claro/oscuro">🌙</button>
+    </nav>
+  </header>
+
+  <header class="topbar" id="topbar-guest">
+    <span class="brand">🚇 Metrolínea Reportes</span>
+  </header>
+
+  <main id="view-root"></main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="puntos.js"></script>
+</body>
+</html>
