@@ -36,7 +36,8 @@ RUTAS: Dict[str, List[dict]] = {
 # Distribuidos a lo largo del corredor (13 estaciones, índices 0-12) para
 # simular una flota real: buses espaciados en distintos tramos, con
 # velocidades y ocupación variadas en vez de agrupados en un solo punto.
-BUSES_ESTADO: Dict[str, dict] = {
+BUSES_ESTADO: Dict[str, dict]  = {
+    
     "bus_01": {
         "ruta_id": "troncal",
         "segmento_actual": 0,   # arrancando en el Portal de Piedecuesta

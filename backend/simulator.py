@@ -6,6 +6,7 @@ import asyncio
 
 from data import BUSES_ESTADO, RUTAS
 from geo import haversine_km
+from incidents import factor_velocidad_para
 
 INTERVALO_SEGUNDOS = 2.0
 
@@ -30,8 +31,13 @@ async def mover_buses():
                 estado["segmento_actual"] += 1
                 continue
 
-            # ¿Cuánto avanza en este intervalo según su velocidad?
-            avance_km = (estado["velocidad_kmh"] / 3600) * INTERVALO_SEGUNDOS
+            # Si hay un incidente activo en este tramo, el bus va más lento
+            # (la velocidad "nominal" del bus no cambia, solo su avance real).
+            factor_incidente = factor_velocidad_para(estado["ruta_id"], i)
+            velocidad_real = estado["velocidad_kmh"] * factor_incidente
+
+            # ¿Cuánto avanza en este intervalo según su velocidad real?
+            avance_km = (velocidad_real / 3600) * INTERVALO_SEGUNDOS
             avance_fraccion = avance_km / dist_segmento_km
 
             estado["progreso"] += avance_fraccion
