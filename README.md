@@ -209,7 +209,9 @@ Proporcionar una solución tecnológica que permita optimizar la operación del 
 ## 👨‍💻 Autores
 
 ### Daniel Gamboa
-GitHub: [@DanielGamboa-10](https://github.com/DanielGamboa-10)
+### Filip Sanabria
+### Sebastian Salas
+### kevin Castillo
 
 ### Hackathon Metrolínea – Bucaramanga, Colombia
 
