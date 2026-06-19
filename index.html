@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Metrolínea Live — Corredor Troncal</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="/frontend/css/style.css" />
+</head>
+<body>
+
+  <!-- Barra superior: identidad del sistema + reloj en vivo -->
+  <header class="topbar">
+    <div class="topbar__brand">
+      <span class="topbar__dot"></span>
+      <div>
+        <h1 class="topbar__title">METROLÍNEA <span>LIVE</span></h1>
+        <p class="topbar__sub">Corredor troncal · Piedecuesta–Bucaramanga</p>
+      </div>
+    </div>
+    <div class="topbar__status" id="statusChip">
+      <span class="topbar__status-dot" id="statusDot"></span>
+      <span id="statusText">conectando…</span>
+    </div>
+    <div class="topbar__clock" id="clock">--:--:--</div>
+  </header>
+
+  <!-- Mapa -->
+  <main id="mapa" aria-label="Mapa en vivo del corredor"></main>
+
+  <!-- Panel flotante izquierdo: flota activa -->
+  <section class="panel panel--fleet" id="panelFlota">
+    <h2 class="panel__title">Flota activa</h2>
+    <div class="panel__body" id="listaBuses">
+      <p class="panel__hint">Cargando buses…</p>
+    </div>
+    <ul class="legend">
+      <li><span class="legend__dot legend__dot--vacio"></span>Vacío</li>
+      <li><span class="legend__dot legend__dot--medio"></span>Medio</li>
+      <li><span class="legend__dot legend__dot--lleno"></span>Lleno</li>
+    </ul>
+  </section>
+
+  <!-- Panel flotante derecho: tiempos del corredor -->
+  <section class="panel panel--times" id="panelTiempos">
+    <div class="panel__head">
+      <h2 class="panel__title">Tiempos del corredor</h2>
+      <button class="panel__toggle" id="toggleTiempos" aria-expanded="true" aria-label="Contraer panel de tiempos">–</button>
+    </div>
+    <div class="panel__meta" id="tiemposMeta">cargando…</div>
+    <div class="panel__body panel__body--scroll" id="tiemposBody">
+      <p class="panel__hint">Cargando tabla de tiempos…</p>
+    </div>
+  </section>
+
+  <!-- Ficha de bus seleccionado (sustituye al alert/popup nativo) -->
+  <aside class="eta-card" id="etaCard" hidden>
+    <button class="eta-card__close" id="etaClose" aria-label="Cerrar">✕</button>
+    <p class="eta-card__label">ETA estimado</p>
+    <h3 class="eta-card__bus" id="etaBus">—</h3>
+    <p class="eta-card__dest" id="etaDest">—</p>
+    <div class="eta-card__row">
+      <div>
+        <span class="eta-card__num" id="etaMin">—</span>
+        <span class="eta-card__unit">min</span>
+      </div>
+      <div>
+        <span class="eta-card__num" id="etaKm">—</span>
+        <span class="eta-card__unit">km</span>
+      </div>
+    </div>
+    <p class="eta-card__time">consultado a las <span id="etaHora">—</span></p>
+  </aside>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/frontend/js/app.js"></script>
+</body>
+</html>
