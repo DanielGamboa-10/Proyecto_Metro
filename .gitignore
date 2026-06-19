@@ -1,0 +1,6 @@
+venv/
+Train-weapon-3/
+runs/
+evidencias/
+registro_incidentes.txt
+*.pt
